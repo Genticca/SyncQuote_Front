@@ -30,6 +30,12 @@
         <strong>{{ formatVolume(ticker.acc_trade_price_24h, ticker.exchange) }}</strong>
       </div>
     </div>
+
+    <div class="quick-links">
+      <a v-if="exchangeLink" :href="exchangeLink" target="_blank" rel="noopener noreferrer" class="quick-link">
+        {{ ticker.exchange === 'BINANCE' ? 'Binance' : 'Upbit' }}에서 보기 ↗
+      </a>
+    </div>
   </section>
 </template>
 
@@ -44,6 +50,16 @@ const colorClass = computed(() => {
   if (props.ticker?.change === 'RISE') return 'text-red'
   if (props.ticker?.change === 'FALL') return 'text-blue'
   return 'text-black'
+})
+
+const exchangeLink = computed(() => {
+  if (props.ticker?.exchange === 'UPBIT') {
+    return `https://upbit.com/exchange?code=CRIX.UPBIT.${props.ticker.market_code}`
+  }
+  if (props.ticker?.exchange === 'BINANCE') {
+    return `https://www.binance.com/en/trade/${props.ticker.binance_symbol}`
+  }
+  return null
 })
 
 const formatPrice = (value, exchange) => {

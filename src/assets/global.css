@@ -144,6 +144,28 @@ button {
   font-size: 15px;
 }
 
+.quick-links {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.quick-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.quick-link:hover {
+  background: #f5f6f8;
+}
+
 .chart-card {
   min-height: 500px;
 }

@@ -17,6 +17,7 @@
    - 2.7 [가격 변동 Flash 애니메이션](#27-가격-변동-flash-애니메이션)
    - 2.8 [종목 상세 헤더](#28-종목-상세-헤더)
    - 2.9 [캔들스틱 차트](#29-캔들스틱-차트)
+   - 2.10 [외부 거래소 링크 연결 (Quick Links)](#210-외부-거래소-링크-연결-quick-links)
 
 ---
 
@@ -27,8 +28,7 @@
 3. [구현 예정 기능](#3-구현-예정-기능)
    - 3.1 [차트 주기 변경 (Timeframe)](#31-차트-주기-변경-timeframe)
    - 3.2 [자산 분류 탭 필터 (Category Filter)](#32-자산-분류-탭-필터-category-filter)
-   - 3.3 [외부 거래소 링크 연결 (Quick Links)](#33-외부-거래소-링크-연결-quick-links)
-   - 3.4 [실시간 체결 내역 (Trade History)](#34-실시간-체결-내역-trade-history)
+   - 3.3 [실시간 체결 내역 (Trade History)](#33-실시간-체결-내역-trade-history)
 
 ---
 
@@ -274,6 +274,19 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 
 ---
 
+### 2.10 외부 거래소 링크 연결 (Quick Links)
+
+**구현 파일:** `CoinHeader.vue`
+
+`CoinHeader.vue`의 `summary-grid` 하단에 링크 영역을 추가하여 현재 선택된 종목의 실제 거래소 페이지로 바로 이동할 수 있도록 한다. `ticker.market_code`, `ticker.binance_symbol`, `ticker.exchange` 필드를 템플릿 리터럴로 조합해 URL을 동적 생성한다. API 추가 없이 템플릿 수정만으로 완성되었다.
+
+| 거래소 | 링크 패턴 | 조건 |
+|--------|-----------|------|
+| Upbit | `https://upbit.com/exchange?code=CRIX.UPBIT.{market_code}` | `exchange === 'UPBIT'` |
+| Binance | `https://www.binance.com/en/trade/{binance_symbol}` | `exchange === 'BINANCE'` |
+
+---
+
 ## 전체 진행 현황 요약
 
 | 순위 | 기능명 | 상태 | 관련 파일 | API 필요 |
@@ -289,7 +302,7 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 | 2 | 컬럼별 정렬 (Sorting) | ✅ 완료 | CoinList.vue, global.css | ❌ |
 | 3 | 차트 주기 변경 (Timeframe) | 🔲 예정 | CoinChart.vue + 부모 | 파라미터 추가 |
 | 4 | 자산 분류 탭 필터 (Category) | 🔲 예정 | CoinList.vue | 신규 상장만 |
-| 5 | 외부 거래소 링크 (Quick Links) | 🔲 예정 | CoinHeader.vue | ❌ |
+| 5 | 외부 거래소 링크 (Quick Links) | ✅ 완료 | CoinHeader.vue | ❌ |
 | 6 | 실시간 체결 내역 (Trade History) | 🔲 예정 | TradeHistory.vue (신규) | 필요 |
 
 ---
@@ -339,22 +352,7 @@ global.css      — 툴바 버튼 스타일                     (~10줄)
 
 ---
 
-### 3.3 외부 거래소 링크 연결 (Quick Links)
-
-**구현 예정 파일:** `CoinHeader.vue`
-
-**기능 설명**
-
-`CoinHeader.vue`의 `summary-grid` 하단에 링크 영역을 추가하여 현재 선택된 종목의 실제 거래소 페이지로 바로 이동할 수 있도록 한다. 이미 `ticker.market_code`, `ticker.binance_symbol`, `ticker.exchange` 필드가 존재하므로 템플릿 리터럴로 URL을 동적 생성하기만 하면 된다. 코드 추가·API 추가 없이 템플릿 수정만으로 완성 가능하다.
-
-| 거래소 | 링크 패턴 | 조건 |
-|--------|-----------|------|
-| Upbit | `https://upbit.com/exchange?code=CRIX.UPBIT.{market_code}` | `exchange === 'UPBIT'` |
-| Binance | `https://www.binance.com/en/trade/{binance_symbol}` | `exchange === 'BINANCE'` |
-
----
-
-### 3.4 실시간 체결 내역 (Trade History)
+### 3.3 실시간 체결 내역 (Trade History)
 
 **구현 예정 파일:** `TradeHistory.vue` (신규) + `global.css` 레이아웃 변경
 
