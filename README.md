@@ -2,22 +2,25 @@
 
 ## 목차
 
-1. [Vue 파일 설명](#1-vue-파일-설명)
-   - 1.1 [CoinList.vue](#11-coinlistvue)
-   - 1.2 [CoinListItem.vue](#12-coinlistitemvue)
-   - 1.3 [CoinHeader.vue](#13-coinheadervue)
-   - 1.4 [CoinChart.vue](#14-coinchartvue)
-2. [구현된 기능](#2-구현된-기능)
-   - 2.1 [거래소 탭 전환](#21-거래소-탭-전환)
-   - 2.2 [관심목록 (즐겨찾기)](#22-관심목록-즐겨찾기)
-   - 2.3 [종목 선택 및 하이라이트](#23-종목-선택-및-하이라이트)
-   - 2.4 [종목 검색](#24-종목-검색)
-   - 2.5 [컬럼별 정렬](#25-컬럼별-정렬)
-   - 2.6 [가격 포맷 및 등락 색상](#26-가격-포맷-및-등락-색상)
-   - 2.7 [가격 변동 Flash 애니메이션](#27-가격-변동-flash-애니메이션)
-   - 2.8 [종목 상세 헤더](#28-종목-상세-헤더)
-   - 2.9 [캔들스틱 차트](#29-캔들스틱-차트)
-   - 2.10 [외부 거래소 링크 연결 (Quick Links)](#210-외부-거래소-링크-연결-quick-links)
+1. [이슈](#1-이슈)
+   - 1.1 [자산 분류 탭 필터 (Category Filter) 기능 추가](#11-자산-분류-탭-필터-category-filter-기능-추가)
+2. [Vue 파일 설명](#2-vue-파일-설명)
+   - 2.1 [CoinList.vue](#21-coinlistvue)
+   - 2.2 [CoinListItem.vue](#22-coinlistitemvue)
+   - 2.3 [CoinHeader.vue](#23-coinheadervue)
+   - 2.4 [CoinChart.vue](#24-coinchartvue)
+3. [구현된 기능](#3-구현된-기능)
+   - 3.1 [거래소 탭 전환](#31-거래소-탭-전환)
+   - 3.2 [관심목록 (즐겨찾기)](#32-관심목록-즐겨찾기)
+   - 3.3 [종목 선택 및 하이라이트](#33-종목-선택-및-하이라이트)
+   - 3.4 [종목 검색](#34-종목-검색)
+   - 3.5 [컬럼별 정렬](#35-컬럼별-정렬)
+   - 3.6 [가격 포맷 및 등락 색상](#36-가격-포맷-및-등락-색상)
+   - 3.7 [가격 변동 Flash 애니메이션](#37-가격-변동-flash-애니메이션)
+   - 3.8 [종목 상세 헤더](#38-종목-상세-헤더)
+   - 3.9 [캔들스틱 차트](#39-캔들스틱-차트)
+   - 3.10 [외부 거래소 링크 연결 (Quick Links)](#310-외부-거래소-링크-연결-quick-links)
+   - 3.11 [자산 분류 탭 필터 (Category Filter)](#311-자산-분류-탭-필터-category-filter)
 
 ---
 
@@ -25,16 +28,32 @@
 
 ---
 
-3. [구현 예정 기능](#3-구현-예정-기능)
-   - 3.1 [차트 주기 변경 (Timeframe)](#31-차트-주기-변경-timeframe)
-   - 3.2 [자산 분류 탭 필터 (Category Filter)](#32-자산-분류-탭-필터-category-filter)
-   - 3.3 [실시간 체결 내역 (Trade History)](#33-실시간-체결-내역-trade-history)
+4. [구현 예정 기능](#4-구현-예정-기능)
+   - 4.1 [차트 주기 변경 (Timeframe)](#41-차트-주기-변경-timeframe)
+   - 4.2 [실시간 체결 내역 (Trade History)](#42-실시간-체결-내역-trade-history)
 
 ---
 
-## 1. Vue 파일 설명
+## 1. 이슈
 
-### 1.1 CoinList.vue
+### 1.1 자산 분류 탭 필터 (Category Filter) 기능 추가
+
+기존 DB에 새로운 필드(컬럼, 속성)를 추가하지 않는 방향으로 진행한다.
+
+다만 `[거래대금 상위 : acc_trade_price_24h]`의 데이터를 `[정렬 기능]`에서도 공유하고 있다. 따라서 기능적으로 `[거래대금 상위 : acc_trade_price_24h]` 항목 기준으로 **정렬과 카테고리 필터가 동일한 필드를 참조**하는 구조가 된다.
+
+| 구분 | 사용 필드 | 비고 |
+|------|-----------|------|
+| 카테고리 필터 — 거래대금 상위 | `acc_trade_price_24h` | 내림차순 상위 N개 슬라이스 |
+| 정렬 기능 — 거래대금 컬럼 | `acc_trade_price_24h` | asc / desc 토글 정렬 |
+
+> **영향 범위:** `CoinList.vue` 내 `sortedTickers` computed 체인에서 카테고리 필터와 정렬이 순서에 따라 결과가 달라질 수 있으므로, 적용 순서(필터 → 정렬 or 정렬 → 필터)를 명확히 정의해야 한다.
+
+---
+
+## 2. Vue 파일 설명
+
+### 2.1 CoinList.vue
 
 **파일 역할**
 
@@ -64,7 +83,7 @@
 
 ---
 
-### 1.2 CoinListItem.vue
+### 2.2 CoinListItem.vue
 
 **파일 역할**
 
@@ -88,7 +107,7 @@
 
 ---
 
-### 1.3 CoinHeader.vue
+### 2.3 CoinHeader.vue
 
 **파일 역할**
 
@@ -110,7 +129,7 @@
 
 ---
 
-### 1.4 CoinChart.vue
+### 2.4 CoinChart.vue
 
 **파일 역할**
 
@@ -137,9 +156,9 @@
 
 ---
 
-## 2. 구현된 기능
+## 3. 구현된 기능
 
-### 2.1 거래소 탭 전환
+### 3.1 거래소 탭 전환
 
 **구현 파일:** `CoinList.vue`
 
@@ -153,7 +172,7 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 
 ---
 
-### 2.2 관심목록 (즐겨찾기)
+### 3.2 관심목록 (즐겨찾기)
 
 **구현 파일:** `CoinList.vue`, `CoinListItem.vue`
 
@@ -167,7 +186,7 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 
 ---
 
-### 2.3 종목 선택 및 하이라이트
+### 3.3 종목 선택 및 하이라이트
 
 **구현 파일:** `CoinList.vue`, `CoinListItem.vue`
 
@@ -175,7 +194,7 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 
 ---
 
-### 2.4 종목 검색
+### 3.4 종목 검색
 
 **구현 파일:** `CoinList.vue` + `global.css`
 
@@ -192,7 +211,7 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 
 ---
 
-### 2.5 컬럼별 정렬
+### 3.5 컬럼별 정렬
 
 **구현 파일:** `CoinList.vue` + `global.css`
 
@@ -213,7 +232,7 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 
 ---
 
-### 2.6 가격 포맷 및 등락 색상
+### 3.6 가격 포맷 및 등락 색상
 
 **구현 파일:** `CoinListItem.vue`, `CoinHeader.vue`
 
@@ -227,7 +246,7 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 
 ---
 
-### 2.7 가격 변동 Flash 애니메이션
+### 3.7 가격 변동 Flash 애니메이션
 
 **구현 파일:** `CoinListItem.vue` + `global.css`
 
@@ -240,7 +259,7 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 
 ---
 
-### 2.8 종목 상세 헤더
+### 3.8 종목 상세 헤더
 
 **구현 파일:** `CoinHeader.vue`
 
@@ -258,7 +277,7 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 
 ---
 
-### 2.9 캔들스틱 차트
+### 3.9 캔들스틱 차트
 
 **구현 파일:** `CoinChart.vue`
 
@@ -274,7 +293,7 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 
 ---
 
-### 2.10 외부 거래소 링크 연결 (Quick Links)
+### 3.10 외부 거래소 링크 연결 (Quick Links)
 
 **구현 파일:** `CoinHeader.vue`
 
@@ -284,6 +303,22 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 |--------|-----------|------|
 | Upbit | `https://upbit.com/exchange?code=CRIX.UPBIT.{market_code}` | `exchange === 'UPBIT'` |
 | Binance | `https://www.binance.com/en/trade/{binance_symbol}` | `exchange === 'BINANCE'` |
+
+---
+
+### 3.11 자산 분류 탭 필터 (Category Filter)
+
+**구현 파일:** `CoinList.vue`
+
+거래소 탭 하단에 카테고리 필터 행을 추가하여 `[전체 | 상승률 상위 | 거래대금 상위]` 버튼으로 목록을 빠르게 분류할 수 있다. 상승률·거래대금 필터는 이미 존재하는 필드를 클라이언트에서 정렬/슬라이싱하여 처리하므로 API 추가가 없다.
+
+> ⚠️ `acc_trade_price_24h` 필드를 정렬 기능(3.5)과 공유함. 이슈 [1.1](#11-자산-분류-탭-필터-category-filter-기능-추가) 참고.
+
+| 필터 항목 | 사용 필드 | 처리 방식 | API 필요 |
+|-----------|-----------|-----------|:--------:|
+| 전체 | — | 필터 없음 | ❌ |
+| 상승률 상위 | `signed_change_rate` | 내림차순 정렬 + 상위 N개 슬라이스 | ❌ |
+| 거래대금 상위 | `acc_trade_price_24h` | 내림차순 정렬 + 상위 N개 슬라이스 | ❌ |
 
 ---
 
@@ -301,15 +336,15 @@ Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upb
 | 1 | 종목 검색 (Search) | ✅ 완료 | CoinList.vue, global.css | ❌ |
 | 2 | 컬럼별 정렬 (Sorting) | ✅ 완료 | CoinList.vue, global.css | ❌ |
 | 3 | 차트 주기 변경 (Timeframe) | 🔲 예정 | CoinChart.vue + 부모 | 파라미터 추가 |
-| 4 | 자산 분류 탭 필터 (Category) | 🔲 예정 | CoinList.vue | 신규 상장만 |
+| 4 | 자산 분류 탭 필터 (Category) | ✅ 완료 | CoinList.vue | ❌ |
 | 5 | 외부 거래소 링크 (Quick Links) | ✅ 완료 | CoinHeader.vue | ❌ |
 | 6 | 실시간 체결 내역 (Trade History) | 🔲 예정 | TradeHistory.vue (신규) | 필요 |
 
 ---
 
-## 3. 구현 예정 기능
+## 4. 구현 예정 기능
 
-### 3.1 차트 주기 변경 (Timeframe)
+### 4.1 차트 주기 변경 (Timeframe)
 
 **구현 예정 파일:** `CoinChart.vue` + 부모 컴포넌트
 
@@ -335,24 +370,7 @@ global.css      — 툴바 버튼 스타일                     (~10줄)
 
 ---
 
-### 3.2 자산 분류 탭 필터 (Category Filter)
-
-**구현 예정 파일:** `CoinList.vue`
-
-**기능 설명**
-
-거래소 탭 하단에 카테고리 필터 행을 추가하여 `[전체 | 상승률 상위 | 거래대금 상위]` 버튼으로 목록을 빠르게 분류할 수 있게 한다. 상승률·거래대금 필터는 이미 존재하는 필드를 클라이언트에서 정렬/슬라이싱하여 처리하므로 API 추가가 필요 없다. 신규 상장 필터는 `is_new` 필드가 없어 백엔드 추가가 필요하다.
-
-| 필터 항목 | 사용 필드 | 처리 방식 | API 필요 |
-|-----------|-----------|-----------|:--------:|
-| 전체 | — | 필터 없음 | ❌ |
-| 상승률 상위 | `signed_change_rate` | 내림차순 정렬 + 상위 N개 슬라이스 | ❌ |
-| 거래대금 상위 | `acc_trade_price_24h` | 내림차순 정렬 + 상위 N개 슬라이스 | ❌ |
-| 신규 상장 | `is_new` (미존재) | — | ✅ 백엔드 필드 추가 필요 |
-
----
-
-### 3.3 실시간 체결 내역 (Trade History)
+### 4.2 실시간 체결 내역 (Trade History)
 
 **구현 예정 파일:** `TradeHistory.vue` (신규) + `global.css` 레이아웃 변경
 

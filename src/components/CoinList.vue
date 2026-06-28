@@ -6,6 +6,12 @@
       <button :class="{ active: activeTab === 'FAVORITES' }" @click="activeTab = 'FAVORITES'">관심목록</button>
     </div>
 
+    <div class="category-tabs">
+      <button :class="{ active: categoryFilter === 'ALL' }" @click="selectCategory('ALL')">전체</button>
+      <button :class="{ active: categoryFilter === 'TOP_GAINERS' }" @click="selectCategory('TOP_GAINERS')">상승률 상위</button>
+      <button :class="{ active: categoryFilter === 'TOP_VOLUME' }" @click="selectCategory('TOP_VOLUME')">거래대금 상위</button>
+    </div>
+
     <div class="search-box">
       <input v-model="searchQuery" type="text" placeholder="코인명 또는 심볼 검색" class="search-input" />
     </div>
@@ -54,6 +60,8 @@ const emit = defineEmits(['select-coin', 'update:exchange'])
 const favorites = ref([])
 const activeTab = ref(props.exchange)
 const searchQuery = ref('')
+const categoryFilter = ref('ALL')
+const CATEGORY_LIMIT = 20
 
 onMounted(() => {
   try {
@@ -70,10 +78,24 @@ const displayedTickers = computed(() => {
   return props.tickers
 })
 
+const categoryTickers = computed(() => {
+  if (categoryFilter.value === 'TOP_GAINERS') {
+    return [...displayedTickers.value]
+      .sort((a, b) => b.signed_change_rate - a.signed_change_rate)
+      .slice(0, CATEGORY_LIMIT)
+  }
+  if (categoryFilter.value === 'TOP_VOLUME') {
+    return [...displayedTickers.value]
+      .sort((a, b) => b.acc_trade_price_24h - a.acc_trade_price_24h)
+      .slice(0, CATEGORY_LIMIT)
+  }
+  return displayedTickers.value
+})
+
 const filteredTickers = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
-  if (!query) return displayedTickers.value
-  return displayedTickers.value.filter((coin) =>
+  if (!query) return categoryTickers.value
+  return categoryTickers.value.filter((coin) =>
     [coin.korean_name, coin.english_name, coin.symbol, coin.market_code].some((field) =>
       field?.toLowerCase().includes(query)
     )
@@ -114,6 +136,11 @@ const toggleSort = (key) => {
 const sortArrow = (key) => {
   if (sortKey.value !== key) return ''
   return sortOrder.value === 'asc' ? ' ▲' : ' ▼'
+}
+
+const selectCategory = (category) => {
+  categoryFilter.value = category
+  sortKey.value = null
 }
 
 const selectExchangeTab = (exchange) => {

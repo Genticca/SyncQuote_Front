@@ -237,6 +237,36 @@ button {
   color: #222831;
 }
 
+.category-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.category-tabs button {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: #ffffff;
+  color: #68717f;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.category-tabs button:hover {
+  border-color: #115dcb;
+  color: #222831;
+}
+
+.category-tabs button.active {
+  border-color: #115dcb;
+  background: #115dcb;
+  color: #ffffff;
+}
+
 .search-box {
   padding: 8px 14px;
   border-bottom: 1px solid var(--border-color);
