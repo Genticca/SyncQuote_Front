@@ -54,16 +54,33 @@ src/
 
 ```bash
 npm install
-npm run dev       # 개발 서버 (vite)
-npm run build     # 프로덕션 빌드
+npm run dev       # development mode: Vite dev server
+npm run build     # production mode: 정적 파일 빌드
 npm run preview   # 빌드 결과 미리보기
 ```
 
-- 개발 서버는 `vite.config.js`의 프록시로 `/api` 요청을 `http://localhost:8080`(백엔드)로 전달합니다. 따라서 CORS 설정 없이 바로 연동됩니다.
-- API 베이스 경로는 `.env`의 `VITE_API_BASE`로 변경할 수 있습니다(미설정 시 `/api/v1`). 예시는 `.env.example` 참고.
+### Development / Production 환경
+
+Front는 Vite mode 기준으로 환경을 분리합니다.
+
+| 파일 | 사용 시점 | 역할 |
+| --- | --- | --- |
+| `.env.development` | `npm run dev` | `/api` 요청을 로컬 Spring(`VITE_API_TARGET`)으로 프록시 |
+| `.env.production` | `npm run build` | K8s Ingress/Nginx 같은 origin의 `/api/v1` 사용 |
+| `.env.example` | 공유용 예시 | 환경변수 설명 |
+
+개발 모드에서는 브라우저가 `http://localhost:5173/api/v1/...`로 요청하지만, Vite proxy가 Spring으로 전달합니다.
 
 ```env
-# .env
+# .env.development
+VITE_API_BASE=/api/v1
+VITE_API_TARGET=http://localhost:8080
+```
+
+운영 모드에서는 Front와 API가 외부 80 포트의 같은 origin 아래에서 Ingress path로 분기된다는 전제로 상대경로를 유지합니다.
+
+```env
+# .env.production
 VITE_API_BASE=/api/v1
 ```
 
