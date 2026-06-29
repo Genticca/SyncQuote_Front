@@ -4,7 +4,7 @@
       <span class="fav-icon" @click.stop="$emit('toggle-fav', coin.market)">{{ isFavorite ? '★' : '☆' }}</span>
       <span class="name-wrap">
         <strong>{{ coin.korean_name }}</strong>
-        <small>{{ coin.market }} · {{ coin.binance_symbol }}</small>
+        <small>{{ coin.market }}</small>
       </span>
     </span>
     <span class="price" :class="colorClass">{{ formatPrice(coin.trade_price) }}</span>

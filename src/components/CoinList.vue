@@ -34,7 +34,7 @@
         v-for="coin in sortedTickers"
         :key="coin.market"
         :coin="coin"
-        :selected="coin.market === selectedMarketCode"
+        :selected="coin.market === selectedMarket"
         :is-favorite="favorites.includes(coin.market)"
         @select="$emit('select-coin', coin.market)"
         @toggle-fav="toggleFavorite"
@@ -52,7 +52,7 @@ const props = defineProps({
   exchange: { type: String, required: true },
   tickers: { type: Array, default: () => [] },
   allTickers: { type: Array, default: () => [] },
-  selectedMarketCode: { type: String, default: '' },
+  selectedMarket: { type: String, default: '' },
 })
 
 const emit = defineEmits(['select-coin', 'update:exchange'])
@@ -65,7 +65,7 @@ const CATEGORY_LIMIT = 20
 
 onMounted(() => {
   try {
-    favorites.value = JSON.parse(Cookies.get('mock_favorites') || '[]')
+    favorites.value = JSON.parse(Cookies.get('syncquote_favorites') || '[]')
   } catch {
     favorites.value = []
   }
@@ -152,6 +152,6 @@ const toggleFavorite = (marketCode) => {
   const index = favorites.value.indexOf(marketCode)
   if (index === -1) favorites.value.push(marketCode)
   else favorites.value.splice(index, 1)
-  Cookies.set('mock_favorites', JSON.stringify(favorites.value), { expires: 30 })
+  Cookies.set('syncquote_favorites', JSON.stringify(favorites.value), { expires: 30 })
 }
 </script>

@@ -3,7 +3,7 @@
     <div class="chart-toolbar">
       <div>
         <strong>{{ ticker?.market }}</strong>
-        <span>Daily Mock Candles</span>
+        <span>1m Candles</span>
       </div>
       <div class="legend">
         <span class="legend-up"></span>상승

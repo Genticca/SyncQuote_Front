@@ -1,387 +1,218 @@
-# Exchange View 프론트엔드 명세서
+# SyncQuote 프론트엔드
+
+업비트·바이낸스 실시간 시세/차트 대시보드 **SyncQuote**의 프론트엔드입니다. Vue 3 기반이며, 백엔드 **SyncQuote API(REST + SSE)** 에서 데이터를 받아 전광판(종목 목록) · 종목 헤더 · 캔들 차트를 렌더링합니다.
+
+> 이전에는 `mockMarkets.js` 기반의 Mock 프로토타입이었으나, 현재는 **백엔드 REST/SSE API에 직접 연동**합니다. 필드명/단위는 모두 **DB 스키마 기준(snake_case)** 으로 통일되어 있습니다.
 
 ## 목차
-
-1. [이슈](#1-이슈)
-   - 1.1 [자산 분류 탭 필터 (Category Filter) 기능 추가](#11-자산-분류-탭-필터-category-filter-기능-추가)
-2. [Vue 파일 설명](#2-vue-파일-설명)
-   - 2.1 [CoinList.vue](#21-coinlistvue)
-   - 2.2 [CoinListItem.vue](#22-coinlistitemvue)
-   - 2.3 [CoinHeader.vue](#23-coinheadervue)
-   - 2.4 [CoinChart.vue](#24-coinchartvue)
-3. [구현된 기능](#3-구현된-기능)
-   - 3.1 [거래소 탭 전환](#31-거래소-탭-전환)
-   - 3.2 [관심목록 (즐겨찾기)](#32-관심목록-즐겨찾기)
-   - 3.3 [종목 선택 및 하이라이트](#33-종목-선택-및-하이라이트)
-   - 3.4 [종목 검색](#34-종목-검색)
-   - 3.5 [컬럼별 정렬](#35-컬럼별-정렬)
-   - 3.6 [가격 포맷 및 등락 색상](#36-가격-포맷-및-등락-색상)
-   - 3.7 [가격 변동 Flash 애니메이션](#37-가격-변동-flash-애니메이션)
-   - 3.8 [종목 상세 헤더](#38-종목-상세-헤더)
-   - 3.9 [캔들스틱 차트](#39-캔들스틱-차트)
-   - 3.10 [외부 거래소 링크 연결 (Quick Links)](#310-외부-거래소-링크-연결-quick-links)
-   - 3.11 [자산 분류 탭 필터 (Category Filter)](#311-자산-분류-탭-필터-category-filter)
+1. [기술 스택](#1-기술-스택)
+2. [프로젝트 구조](#2-프로젝트-구조)
+3. [실행 방법](#3-실행-방법)
+4. [백엔드 연동](#4-백엔드-연동)
+5. [데이터 모델](#5-데이터-모델)
+6. [API 모듈 (`src/api`)](#6-api-모듈-srcapi)
+7. [컴포넌트 설명](#7-컴포넌트-설명)
+8. [구현된 기능](#8-구현된-기능)
+9. [구현 예정 기능](#9-구현-예정-기능)
 
 ---
 
-[전체 진행 현황 요약](#전체-진행-현황-요약)
+## 1. 기술 스택
+
+| 구분 | 사용 |
+| --- | --- |
+| 프레임워크 | Vue 3 (`<script setup>`) |
+| 빌드 | Vite 7 |
+| REST | axios |
+| 실시간 | SSE (`EventSource`) |
+| 차트 | lightweight-charts v5 |
+| 클라이언트 저장 | js-cookie (관심목록) |
 
 ---
 
-4. [구현 예정 기능](#4-구현-예정-기능)
-   - 4.1 [차트 주기 변경 (Timeframe)](#41-차트-주기-변경-timeframe)
-   - 4.2 [실시간 체결 내역 (Trade History)](#42-실시간-체결-내역-trade-history)
+## 2. 프로젝트 구조
+
+```text
+src/
+├── api/
+│   ├── client.js        # axios 인스턴스 + 공통 응답 Envelope unwrap
+│   └── markets.js       # REST(fetch*) + SSE(stream*) 호출 헬퍼
+├── components/
+│   ├── CoinList.vue     # 종목 목록 패널 (탭/카테고리/검색/정렬/관심목록)
+│   ├── CoinListItem.vue # 종목 행 (가격·등락·Flash)
+│   ├── CoinHeader.vue   # 선택 종목 상세 헤더
+│   └── CoinChart.vue    # 캔들스틱 차트
+├── assets/
+│   └── global.css
+├── App.vue              # 데이터 적재 / SSE 구독 / 상태 관리
+└── main.js
+```
 
 ---
 
-## 1. 이슈
+## 3. 실행 방법
 
-### 1.1 자산 분류 탭 필터 (Category Filter) 기능 추가
+```bash
+npm install
+npm run dev       # 개발 서버 (vite)
+npm run build     # 프로덕션 빌드
+npm run preview   # 빌드 결과 미리보기
+```
 
-기존 DB에 새로운 필드(컬럼, 속성)를 추가하지 않는 방향으로 진행한다.
+- 개발 서버는 `vite.config.js`의 프록시로 `/api` 요청을 `http://localhost:8080`(백엔드)로 전달합니다. 따라서 CORS 설정 없이 바로 연동됩니다.
+- API 베이스 경로는 `.env`의 `VITE_API_BASE`로 변경할 수 있습니다(미설정 시 `/api/v1`). 예시는 `.env.example` 참고.
 
-다만 `[거래대금 상위 : acc_trade_price_24h]`의 데이터를 `[정렬 기능]`에서도 공유하고 있다. 따라서 기능적으로 `[거래대금 상위 : acc_trade_price_24h]` 항목 기준으로 **정렬과 카테고리 필터가 동일한 필드를 참조**하는 구조가 된다.
-
-| 구분 | 사용 필드 | 비고 |
-|------|-----------|------|
-| 카테고리 필터 — 거래대금 상위 | `acc_trade_price_24h` | 내림차순 상위 N개 슬라이스 |
-| 정렬 기능 — 거래대금 컬럼 | `acc_trade_price_24h` | asc / desc 토글 정렬 |
-
-> **영향 범위:** `CoinList.vue` 내 `sortedTickers` computed 체인에서 카테고리 필터와 정렬이 순서에 따라 결과가 달라질 수 있으므로, 적용 순서(필터 → 정렬 or 정렬 → 필터)를 명확히 정의해야 한다.
-
----
-
-## 2. Vue 파일 설명
-
-### 2.1 CoinList.vue
-
-**파일 역할**
-
-종목 리스트 전체를 관장하는 패널 컴포넌트. Upbit / Binance / 관심목록 탭 전환, 검색, 정렬, 즐겨찾기 상태를 모두 이 파일에서 처리한다. `CoinListItem`을 v-for로 렌더링하며, 탭 변경 시 `update:exchange` emit으로 부모에 거래소 전환을 알린다.
-
-**Props**
-
-| prop | 타입 | 설명 |
-|------|------|------|
-| `exchange` | String | 현재 선택된 거래소 (`UPBIT` \| `BINANCE`) |
-| `tickers` | Array | 현재 거래소의 종목 목록 |
-| `allTickers` | Array | 전체 거래소 합산 목록 (관심목록 필터용) |
-| `selectedMarketCode` | String | 현재 선택된 종목 코드 |
-
-**내부 상태**
-
-| ref / computed | 설명 |
-|----------------|------|
-| `activeTab` | 현재 활성 탭 (`UPBIT` \| `BINANCE` \| `FAVORITES`) |
-| `favorites` | 쿠키에서 불러온 관심 종목 코드 배열 |
-| `searchQuery` | 검색 입력값 |
-| `sortKey` | 정렬 기준 컬럼 (`name` \| `price` \| `change` \| `volume`) |
-| `sortOrder` | 정렬 방향 (`asc` \| `desc`) |
-| `displayedTickers` | 탭 기준 필터 결과 |
-| `filteredTickers` | 검색어 적용 결과 |
-| `sortedTickers` | 최종 렌더링 목록 (정렬 적용) |
+```env
+# .env
+VITE_API_BASE=/api/v1
+```
 
 ---
 
-### 2.2 CoinListItem.vue
+## 4. 백엔드 연동
 
-**파일 역할**
+**원칙:** 진입 시 REST로 초기 데이터를 1회 적재하고, 이후 갱신은 SSE로 받습니다.
 
-종목 목록의 개별 행(row) 컴포넌트. 가격·등락률·거래대금 포맷팅, 등락 색상, 가격 변동 시 Flash 애니메이션, 관심 아이콘 토글을 담당한다. `<button>` 태그로 구현되어 클릭 시 `select` emit으로 부모에 종목 선택을 알린다.
+```text
+진입         GET  /api/v1/tickers              → 전광판 초기 렌더 (전체 거래소)
+실시간 시세  SSE  /api/v1/stream/tickers        → market 기준 항목 in-place 갱신
+종목 선택    GET  /api/v1/candles?interval=1m   → 차트 초기 렌더
+차트 실시간  ticker 현재가를 마지막 봉에 주입    → 캔들 실시간 반영
+```
 
-**Props**
+- 거래소 탭(UPBIT/BINANCE) 전환은 전체 목록을 받아 **클라이언트에서 필터링**합니다(관심목록의 거래소 교차 지원).
+- 검색 · 정렬 · 카테고리 · 관심목록은 데이터셋이 작아 **클라이언트에서 처리**합니다.
+- API 호출 실패 시 Mock으로 대체하지 않고 **에러 배너**를 표시합니다.
 
-| prop | 타입 | 설명 |
-|------|------|------|
-| `coin` | Object | 종목 데이터 객체 |
-| `selected` | Boolean | 현재 선택된 종목 여부 |
-| `isFavorite` | Boolean | 관심 종목 여부 |
+응답은 공통 Envelope로 감싸져 옵니다.
 
-**포맷터 함수**
-
-| 함수 | 처리 내용 |
-|------|-----------|
-| `formatPrice(value)` | 가격 크기에 따라 소수점 자동 조정 (< 10 → 4자리, < 1000 → 2자리, 이상 → 0자리) |
-| `formatChange(value)` | `signed_change_rate` 기반 `+/-` 부호 포함 % 표기 |
-| `formatVolume(value)` | 백만 단위 환산 후 천 단위 콤마 표기 |
-
----
-
-### 2.3 CoinHeader.vue
-
-**파일 역할**
-
-선택된 종목의 상세 요약 정보를 상단에 표시하는 헤더 컴포넌트. 현재가, 전일대비, 당일 고가/저가, 24H 거래대금을 `summary-grid` 4열 레이아웃으로 보여준다. Upbit(KRW) / Binance(USDT) 거래소에 따라 통화 단위를 자동 분기 표시한다.
-
-**Props**
-
-| prop | 타입 | 설명 |
-|------|------|------|
-| `ticker` | Object | 선택된 종목의 전체 데이터 객체 |
-
-**포맷터 함수**
-
-| 함수 | 처리 내용 |
-|------|-----------|
-| `formatPrice(value, exchange)` | 거래소별 통화 단위 분기 (`KRW` \| `USDT`) |
-| `formatChange(value)` | 부호 포함 % 표기 |
-| `formatVolume(value, exchange)` | 백만 단위 환산, 단위 텍스트 분기 (`백만 KRW` \| `M USDT`) |
+```json
+{ "success": true, "data": <본문>, "error": null, "timestamp": 1719628800000 }
+```
 
 ---
 
-### 2.4 CoinChart.vue
+## 5. 데이터 모델
 
-**파일 역할**
+필드명은 **DB 컬럼명(snake_case)** 기준입니다. (구 `market_code → market`, `change → change_status`, `binance_symbol` 제거)
 
-`lightweight-charts` v5 라이브러리를 사용한 캔들스틱 차트 컴포넌트. `candles` prop을 watch하여 종목 변경 시 차트 데이터를 자동 교체한다. `ResizeObserver`로 컨테이너 너비 변화를 감지해 반응형으로 동작하며, `onUnmounted`에서 메모리를 명시적으로 정리한다.
+### Ticker
 
-**Props**
+| 필드 | 타입 | 설명 |
+| --- | --- | --- |
+| `exchange` | string | `UPBIT` / `BINANCE` |
+| `market` | string | 마켓 코드 (전 화면 식별 키) |
+| `symbol` | string | 심볼 (예: `BTC`) |
+| `korean_name` / `english_name` | string | 이름 |
+| `market_warning` | string | `NONE` / `CAUTION` |
+| `trade_price` | number | 현재가 |
+| `change_status` | string | `RISE` / `EVEN` / `FALL` (색상 분기) |
+| `change_rate` | number | 변화율 절댓값(%) |
+| `signed_change_rate` | number | 전일대비 부호 변화율(%) |
+| `signed_change_price` | number | 전일대비 금액 |
+| `acc_trade_price_24h` | number | 24h 거래대금 |
+| `acc_trade_volume_24h` | number | 24h 거래량 |
+| `high_price` / `low_price` | number | 당일 고가/저가 |
+| `high_price_52w` / `low_price_52w` | number | 52주 고가/저가 |
+| `event_timestamp` | number | 거래소 이벤트 시각(ms) |
 
-| prop | 타입 | 설명 |
-|------|------|------|
-| `ticker` | Object | 선택된 종목 정보 (툴바 표시용) |
-| `candles` | Array | OHLC 캔들 데이터 배열 |
+> 등락 색상: `change_status`가 `RISE` → 빨강, `FALL` → 파랑, 그 외 → 검정.
+> 변화율은 **퍼센트** 값이므로 `toFixed(2) + '%'`로 그대로 표기.
 
-**캔들 데이터 구조**
+### Candle (lightweight-charts 호환)
 
 ```js
 {
-  time: "2025-06-27",   // YYYY-MM-DD
-  open: 140500000,
-  high: 143200000,
-  low:  139800000,
-  close: 142000000
+  time: 1719628740,   // unix 초
+  open: 138200000,
+  high: 138400000,
+  low:  138150000,
+  close: 138310000,
+  volume: 12.84       // 선택
 }
 ```
 
 ---
 
-## 3. 구현된 기능
+## 6. API 모듈 (`src/api`)
 
-### 3.1 거래소 탭 전환
+### `client.js`
+- `api`: axios 인스턴스 (`baseURL = VITE_API_BASE ?? '/api/v1'`).
+- `unwrap(res)`: 응답 Envelope에서 `data`만 추출하고, `success: false`면 `error.message`로 throw.
 
-**구현 파일:** `CoinList.vue`
+### `markets.js`
 
-Upbit / Binance / 관심목록 3개 탭으로 구성된 거래소 전환 UI. Upbit·Binance 탭 클릭 시 `update:exchange` emit으로 부모 컴포넌트에 거래소 변경을 알리고, 부모가 해당 거래소의 `tickers`를 내려준다. 관심목록 탭은 emit 없이 컴포넌트 내부에서 `allTickers`를 쿠키 favorites와 교차 필터링하여 처리한다.
-
-| 탭 | 동작 |
-|----|------|
-| `UPBIT` | `update:exchange` emit → 부모에서 Upbit tickers 공급 |
-| `BINANCE` | `update:exchange` emit → 부모에서 Binance tickers 공급 |
-| `FAVORITES` | 내부 처리 — `allTickers`에서 쿠키 favorites 교차 필터 |
-
----
-
-### 3.2 관심목록 (즐겨찾기)
-
-**구현 파일:** `CoinList.vue`, `CoinListItem.vue`
-
-`js-cookie` 라이브러리를 사용해 `mock_favorites` 키로 관심 종목 코드 배열을 브라우저 쿠키에 30일 저장한다. 로그인 없이 비회원 상태에서도 관심목록이 유지된다.
-
-| 항목 | 내용 |
-|------|------|
-| 저장 방식 | `js-cookie` → `mock_favorites` 키, 30일 만료 |
-| 등록/해제 | `CoinListItem`의 ★/☆ 클릭 → `toggle-fav` emit → `toggleFavorite()` |
-| 빈 상태 | 관심목록 탭에서 목록이 없을 때 `"관심목록에 추가된 코인이 없습니다."` 표시 |
+| 함수 | 메서드 | 설명 |
+| --- | --- | --- |
+| `fetchTickers(exchange?)` | GET `/tickers` | 현재가 목록(미지정 시 전체 거래소) |
+| `fetchTicker(exchange, market)` | GET `/tickers/{ex}/{market}` | 현재가 단건 |
+| `fetchMarkets(exchange?)` | GET `/markets` | 마켓 기준 정보 |
+| `fetchCandles(exchange, market, interval='1m', limit=200)` | GET `/candles` | 봉 조회 |
+| `streamTickers(onTicker, {exchange?})` | SSE `/stream/tickers` | 현재가 실시간(`EventSource` 반환) |
+| `streamCandles(onCandle, {exchange, market, interval})` | SSE `/stream/candles` | 봉 실시간(1s 차트용) |
 
 ---
 
-### 3.3 종목 선택 및 하이라이트
+## 7. 컴포넌트 설명
 
-**구현 파일:** `CoinList.vue`, `CoinListItem.vue`
+### App.vue
+데이터 적재와 상태의 중심. `fetchTickers()`로 전체 종목을 받고 `streamTickers()`로 실시간 갱신, 선택 종목 변경 시 `fetchCandles()`로 차트 데이터를 캐싱한다.
 
-`CoinListItem` 클릭 시 `select` emit → `CoinList`에서 `select-coin` emit으로 부모에 `market_code` 전달. 부모가 `selectedMarketCode` prop으로 내려주면 해당 행에 `.selected` 클래스가 적용되어 배경색으로 현재 선택 종목을 시각적으로 표시한다.
+| 상태 | 설명 |
+| --- | --- |
+| `tickers` | 전체 거래소 종목 목록 |
+| `selectedExchange` / `selectedMarket` | 현재 거래소 탭 / 선택 종목 |
+| `candlesCache` | 마켓별 봉 캐시 |
+| `selectedCandles` | 마지막 봉에 현재가를 반영한 차트 데이터 |
+| `loadError` | API 실패 시 에러 배너 메시지 |
 
----
+### CoinList.vue
+종목 목록 패널. 거래소 탭(UPBIT/BINANCE/관심목록), 카테고리 필터, 검색, 컬럼 정렬, 즐겨찾기를 처리한다.
 
-### 3.4 종목 검색
+| Prop | 타입 | 설명 |
+| --- | --- | --- |
+| `exchange` | String | 현재 거래소 (`v-model:exchange`) |
+| `tickers` | Array | 현재 거래소 종목 |
+| `allTickers` | Array | 전체 거래소 종목(관심목록용) |
+| `selectedMarket` | String | 선택된 마켓 코드 |
 
-**구현 파일:** `CoinList.vue` + `global.css`
+### CoinListItem.vue
+개별 종목 행. 가격/등락/거래대금 포맷, `change_status` 색상, 가격 변동 Flash, 관심 토글(`market` 기준).
 
-검색 입력값(`searchQuery`)을 `filteredTickers` computed에서 실시간 필터링. 탭 전환 후에도 검색 상태가 유지된다.
+### CoinHeader.vue
+선택 종목 요약 헤더. 현재가·전일대비·당일 고저가·24h 거래대금을 거래소별 통화(KRW/USDT)로 표시. 외부 거래소 링크는 `exchange` + `market`으로 생성.
 
-| 항목 | 내용 |
-|------|------|
-| 검색 대상 필드 | `korean_name`, `english_name`, `symbol`, `market_code` 4개 필드 |
-| 대소문자 | `.toLowerCase()` 처리로 대소문자 구분 없음 |
-| 빈 결과 처리 | `"검색 결과가 없습니다."` 안내 메시지 표시 |
-| API 추가 | 없음 (클라이언트 computed 필터) |
-
-> 원래 명세(2개 필드)보다 확장 구현 — `english_name`, `symbol` 필드 추가
-
----
-
-### 3.5 컬럼별 정렬
-
-**구현 파일:** `CoinList.vue` + `global.css`
-
-`list-header`의 각 컬럼을 `<button>`으로 구현하여 클릭 시 해당 컬럼으로 정렬. 동일 컬럼 재클릭 시 `asc ↔ desc` 방향이 토글되며 `▲/▼` 화살표로 현재 상태를 표시한다. 검색 결과(`filteredTickers`)에 체이닝되어 검색과 정렬이 동시에 작동한다.
-
-| 컬럼 | 정렬 기준 필드 | 정렬 타입 |
-|------|---------------|-----------|
-| 종목 | `korean_name` | 문자열 (`localeCompare`) |
-| 현재가 | `trade_price` | 숫자 |
-| 전일대비 | `signed_change_rate` | 숫자 |
-| 거래대금 | `acc_trade_price_24h` | 숫자 |
-
-| 항목 | 내용 |
-|------|------|
-| 초기값 | `sortKey = null` (서버 수신 순서 유지) |
-| 방향 표시 | 활성 컬럼에 `.sort-arrow` 클래스로 `▲ / ▼` 표시 |
-| API 추가 | 없음 (클라이언트 `.sort()` 처리) |
+### CoinChart.vue
+`lightweight-charts` v5 캔들 차트. `candles` prop을 watch하여 `setData()` + `fitContent()`. `ResizeObserver` 반응형, `onUnmounted`에서 정리.
 
 ---
 
-### 3.6 가격 포맷 및 등락 색상
+## 8. 구현된 기능
 
-**구현 파일:** `CoinListItem.vue`, `CoinHeader.vue`
-
-가격 크기와 거래소에 따라 포맷을 자동 분기한다. `change` 필드(`RISE` / `FALL`)에 따라 CSS 클래스를 바인딩하여 상승은 빨간색(`--upbit-red`), 하락은 파란색(`--upbit-blue`)으로 표시한다.
-
-| 조건 | 소수점 | 거래소별 단위 |
-|------|--------|--------------|
-| `value < 10` | 4자리 | Upbit → KRW, Binance → USDT |
-| `value < 1000` | 2자리 | |
-| 그 외 | 0자리 | |
-
----
-
-### 3.7 가격 변동 Flash 애니메이션
-
-**구현 파일:** `CoinListItem.vue` + `global.css`
-
-`trade_price`를 `watch`하여 이전값 대비 변동이 감지되면 행 전체에 0.45초 배경 Flash 애니메이션을 적용한다.
-
-| 변동 방향 | CSS 클래스 | 색상 |
-|-----------|-----------|------|
-| 상승 | `.flash-up` | 빨간 배경 (`rgba(210,79,69,0.18)`) → 투명 |
-| 하락 | `.flash-down` | 파란 배경 (`rgba(18,97,196,0.18)`) → 투명 |
+| 기능 | 파일 | 데이터 출처 |
+| --- | --- | --- |
+| 거래소 탭 전환 | CoinList.vue | 클라이언트 필터 |
+| 관심목록(즐겨찾기) | CoinList.vue, CoinListItem.vue | 쿠키 `syncquote_favorites`(30일) |
+| 종목 선택/하이라이트 | CoinList.vue, App.vue | — |
+| 종목 검색 | CoinList.vue | 클라이언트 (`korean_name`/`english_name`/`symbol`/`market`) |
+| 컬럼 정렬 | CoinList.vue | 클라이언트 (`trade_price`/`signed_change_rate`/`acc_trade_price_24h`/`korean_name`) |
+| 자산 분류 필터 | CoinList.vue | 클라이언트 (전체/상승률/거래대금) |
+| 가격 포맷·등락 색상 | CoinListItem.vue, CoinHeader.vue | — |
+| 가격 변동 Flash | CoinListItem.vue | — |
+| 종목 상세 헤더 | CoinHeader.vue | **REST `/tickers`** |
+| 캔들 차트 | CoinChart.vue | **REST `/candles`** |
+| 실시간 현재가 | App.vue | **SSE `/stream/tickers`** |
+| 외부 거래소 링크 | CoinHeader.vue | — |
 
 ---
 
-### 3.8 종목 상세 헤더
+## 9. 구현 예정 기능
 
-**구현 파일:** `CoinHeader.vue`
+### 9.1 차트 주기 변경 (Timeframe)
+차트 툴바에 `[1m | 1H | 1D | 1W]` 버튼을 추가하고, 선택 시 `fetchCandles(..., interval)`을 재호출하여 `candles`를 갱신. `candles` watch 구조가 이미 있어 prop 갱신만으로 차트가 바뀐다.
 
-선택 종목의 요약 정보를 4열 그리드로 표시한다. 거래소(`exchange`) prop에 따라 통화 단위가 자동 분기되므로 Upbit·Binance 종목을 동일한 컴포넌트로 처리할 수 있다.
+### 9.2 실시간 체결 내역 (Trade History)
+선택 종목의 체결 내역을 시간 역순으로 보여주는 신규 컴포넌트. 별도 API/스트림 연동 및 `.workspace` 레이아웃(2열→3열) 조정이 필요하다.
 
-| 표시 항목 | 설명 |
-|-----------|------|
-| 심볼 배지 | `symbol` 텍스트 기반 원형 배지 |
-| 한글명 / 영문명 | `korean_name` / `english_name` |
-| 거래소 + Binance 심볼 | `exchange` · `binance_symbol` |
-| 유의 종목 배지 | `market_warning === 'CAUTION'`일 때 노란 '유의' 뱃지 |
-| 현재가 + 등락률 | 거래소별 통화 단위 분기 |
-| 당일 고가 / 저가 | `high_price` / `low_price` |
-| 24H 거래대금 | 백만 단위 환산, 거래소별 단위 분기 |
-
----
-
-### 3.9 캔들스틱 차트
-
-**구현 파일:** `CoinChart.vue`
-
-`lightweight-charts` v5의 `CandlestickSeries`를 사용한 OHLC 차트. 종목 변경 시 `candles` prop watch로 `setData()` + `fitContent()`를 자동 실행한다.
-
-| 항목 | 내용 |
-|------|------|
-| 라이브러리 | `lightweight-charts` v5 (`addSeries(CandlestickSeries)` 방식) |
-| 상승 색상 | `#d24f45` (업비트 빨강) |
-| 하락 색상 | `#1261c4` (업비트 파랑) |
-| 반응형 | `ResizeObserver`로 컨테이너 너비 변화 자동 감지 |
-| 메모리 정리 | `onUnmounted`에서 `ResizeObserver` disconnect + `chart.remove()` |
-
----
-
-### 3.10 외부 거래소 링크 연결 (Quick Links)
-
-**구현 파일:** `CoinHeader.vue`
-
-`CoinHeader.vue`의 `summary-grid` 하단에 링크 영역을 추가하여 현재 선택된 종목의 실제 거래소 페이지로 바로 이동할 수 있도록 한다. `ticker.market_code`, `ticker.binance_symbol`, `ticker.exchange` 필드를 템플릿 리터럴로 조합해 URL을 동적 생성한다. API 추가 없이 템플릿 수정만으로 완성되었다.
-
-| 거래소 | 링크 패턴 | 조건 |
-|--------|-----------|------|
-| Upbit | `https://upbit.com/exchange?code=CRIX.UPBIT.{market_code}` | `exchange === 'UPBIT'` |
-| Binance | `https://www.binance.com/en/trade/{binance_symbol}` | `exchange === 'BINANCE'` |
-
----
-
-### 3.11 자산 분류 탭 필터 (Category Filter)
-
-**구현 파일:** `CoinList.vue`
-
-거래소 탭 하단에 카테고리 필터 행을 추가하여 `[전체 | 상승률 상위 | 거래대금 상위]` 버튼으로 목록을 빠르게 분류할 수 있다. 상승률·거래대금 필터는 이미 존재하는 필드를 클라이언트에서 정렬/슬라이싱하여 처리하므로 API 추가가 없다.
-
-> ⚠️ `acc_trade_price_24h` 필드를 정렬 기능(3.5)과 공유함. 이슈 [1.1](#11-자산-분류-탭-필터-category-filter-기능-추가) 참고.
-
-| 필터 항목 | 사용 필드 | 처리 방식 | API 필요 |
-|-----------|-----------|-----------|:--------:|
-| 전체 | — | 필터 없음 | ❌ |
-| 상승률 상위 | `signed_change_rate` | 내림차순 정렬 + 상위 N개 슬라이스 | ❌ |
-| 거래대금 상위 | `acc_trade_price_24h` | 내림차순 정렬 + 상위 N개 슬라이스 | ❌ |
-
----
-
-## 전체 진행 현황 요약
-
-| 순위 | 기능명 | 상태 | 관련 파일 | API 필요 |
-|:----:|--------|:----:|-----------|:--------:|
-| — | 거래소 탭 전환 | ✅ 완료 | CoinList.vue | ❌ |
-| — | 관심목록 (즐겨찾기) | ✅ 완료 | CoinList.vue, CoinListItem.vue | ❌ |
-| — | 종목 선택 및 하이라이트 | ✅ 완료 | CoinList.vue, CoinListItem.vue | ❌ |
-| — | 가격 포맷 및 등락 색상 | ✅ 완료 | CoinListItem.vue, CoinHeader.vue | ❌ |
-| — | Flash 애니메이션 | ✅ 완료 | CoinListItem.vue, global.css | ❌ |
-| — | 종목 상세 헤더 | ✅ 완료 | CoinHeader.vue | ❌ |
-| — | 캔들스틱 차트 | ✅ 완료 | CoinChart.vue | ❌ |
-| 1 | 종목 검색 (Search) | ✅ 완료 | CoinList.vue, global.css | ❌ |
-| 2 | 컬럼별 정렬 (Sorting) | ✅ 완료 | CoinList.vue, global.css | ❌ |
-| 3 | 차트 주기 변경 (Timeframe) | 🔲 예정 | CoinChart.vue + 부모 | 파라미터 추가 |
-| 4 | 자산 분류 탭 필터 (Category) | ✅ 완료 | CoinList.vue | ❌ |
-| 5 | 외부 거래소 링크 (Quick Links) | ✅ 완료 | CoinHeader.vue | ❌ |
-| 6 | 실시간 체결 내역 (Trade History) | 🔲 예정 | TradeHistory.vue (신규) | 필요 |
-
----
-
-## 4. 구현 예정 기능
-
-### 4.1 차트 주기 변경 (Timeframe)
-
-**구현 예정 파일:** `CoinChart.vue` + 부모 컴포넌트
-
-**기능 설명**
-
-차트 상단 툴바에 `[1m | 1H | 1D | 1W]` 버튼 그룹을 추가하여 사용자가 캔들 주기를 전환할 수 있도록 한다. 버튼 클릭 시 `@change-timeframe` emit으로 부모에 주기를 전달하고, 부모가 해당 주기에 맞는 `/api/candles?unit_code=` API를 재호출하여 `candles` prop을 갱신한다. `candles` watch 구조가 이미 완성되어 있어 prop만 업데이트되면 차트가 자동 갱신된다.
-
-| 항목 | 현재 상태 | 필요 작업 |
-|------|-----------|-----------|
-| 툴바 영역 | `.chart-toolbar` 존재, 버튼 없음 | `[1m \| 1H \| 1D \| 1W]` 버튼 그룹 추가 |
-| 주기 상태 | 없음 | `timeframe ref` 추가 (기본값 `'D'`) |
-| 이벤트 | 없음 | 클릭 시 `@change-timeframe` emit |
-| 차트 갱신 | `candles` prop watch 완성 | 부모에서 API 재호출 후 prop 갱신만 하면 됨 |
-| API | 없음 | `/api/candles?market_code=&unit_code=` 파라미터 추가 |
-
-**예상 추가 코드 범위**
-
-```
-CoinChart.vue   — 툴바 버튼 + timeframe ref + emit    (~15줄)
-부모 컴포넌트   — timeframe watch + API 재호출         (~10줄)
-global.css      — 툴바 버튼 스타일                     (~10줄)
-```
-
----
-
-### 4.2 실시간 체결 내역 (Trade History)
-
-**구현 예정 파일:** `TradeHistory.vue` (신규) + `global.css` 레이아웃 변경
-
-**기능 설명**
-
-선택된 종목의 실시간 체결 내역을 시간 역순으로 표시하는 신규 컴포넌트. 새 체결 데이터가 들어올 때 `unshift()`로 배열 최상단에 추가하고 최대 N개를 유지한다. `CoinListItem`과 유사한 행 구조를 재사용할 수 있어 UI 작업량이 적다. 단, 데이터 공급을 위한 API 또는 WebSocket 연동이 필요하며 `.workspace` 레이아웃 조정도 함께 필요하다.
-
-| 항목 | 내용 |
-|------|------|
-| 컴포넌트 | `TradeHistory.vue` 신규 생성 |
-| 레이아웃 변경 | `.workspace` 2열 → 3열 또는 차트 하단 배치 |
-| 데이터 구조 | `trades[]` — 체결시간, 체결가, 체결량, `RISE` \| `FALL` |
-| 갱신 방식 | `unshift()` 상단 추가 + 최대 N개 유지 |
-| API | `GET /api/trades?market_code=xxx` 또는 WebSocket |
+### 9.3 봉 단위 실시간 차트
+`streamCandles()`(SSE `/stream/candles`, 1s)를 사용해 `series.update()`로 1초봉 차트를 실시간 갱신.
