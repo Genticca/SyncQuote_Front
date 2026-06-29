@@ -2,8 +2,8 @@
   <section class="chart-card">
     <div class="chart-toolbar">
       <div>
-        <strong>{{ ticker?.market_code }}</strong>
-        <span>Daily Mock Candles</span>
+        <strong>{{ ticker?.market }}</strong>
+        <span>1m Candles</span>
       </div>
       <div class="legend">
         <span class="legend-up"></span>상승

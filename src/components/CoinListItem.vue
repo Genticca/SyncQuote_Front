@@ -1,10 +1,10 @@
 <template>
   <button class="coin-item" :class="[{ selected }, flashClass]" @click="$emit('select')">
     <span class="col-name">
-      <span class="fav-icon" @click.stop="$emit('toggle-fav', coin.market_code)">{{ isFavorite ? '★' : '☆' }}</span>
+      <span class="fav-icon" @click.stop="$emit('toggle-fav', coin.market)">{{ isFavorite ? '★' : '☆' }}</span>
       <span class="name-wrap">
         <strong>{{ coin.korean_name }}</strong>
-        <small>{{ coin.market_code }} · {{ coin.binance_symbol }}</small>
+        <small>{{ coin.market }}</small>
       </span>
     </span>
     <span class="price" :class="colorClass">{{ formatPrice(coin.trade_price) }}</span>
@@ -35,8 +35,8 @@ watch(() => props.coin.trade_price, (newPrice, oldPrice) => {
 })
 
 const colorClass = computed(() => {
-  if (props.coin.change === 'RISE') return 'text-red'
-  if (props.coin.change === 'FALL') return 'text-blue'
+  if (props.coin.change_status === 'RISE') return 'text-red'
+  if (props.coin.change_status === 'FALL') return 'text-blue'
   return 'text-black'
 })
 

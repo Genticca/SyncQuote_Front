@@ -7,7 +7,7 @@
           <h1>{{ ticker.korean_name }}</h1>
           <span v-if="ticker.market_warning === 'CAUTION'" class="warning-badge">유의</span>
         </div>
-        <p>{{ ticker.english_name }} · {{ ticker.exchange }} · {{ ticker.binance_symbol }}</p>
+        <p>{{ ticker.english_name }} · {{ ticker.exchange }}</p>
       </div>
     </div>
 
@@ -47,17 +47,17 @@ const props = defineProps({
 })
 
 const colorClass = computed(() => {
-  if (props.ticker?.change === 'RISE') return 'text-red'
-  if (props.ticker?.change === 'FALL') return 'text-blue'
+  if (props.ticker?.change_status === 'RISE') return 'text-red'
+  if (props.ticker?.change_status === 'FALL') return 'text-blue'
   return 'text-black'
 })
 
 const exchangeLink = computed(() => {
   if (props.ticker?.exchange === 'UPBIT') {
-    return `https://upbit.com/exchange?code=CRIX.UPBIT.${props.ticker.market_code}`
+    return `https://upbit.com/exchange?code=CRIX.UPBIT.${props.ticker.market}`
   }
   if (props.ticker?.exchange === 'BINANCE') {
-    return `https://www.binance.com/en/trade/${props.ticker.binance_symbol}`
+    return `https://www.binance.com/en/trade/${props.ticker.market}`
   }
   return null
 })
