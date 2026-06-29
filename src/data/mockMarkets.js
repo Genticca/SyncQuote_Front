@@ -1,16 +1,16 @@
 const marketSeeds = [
-  { exchange: 'UPBIT', market_code: 'KRW-BTC', symbol: 'BTC', korean_name: '비트코인', english_name: 'Bitcoin', binance_symbol: 'BTCUSDT', base_price: 138250000, volume_seed: 126000000000 },
-  { exchange: 'UPBIT', market_code: 'KRW-ETH', symbol: 'ETH', korean_name: '이더리움', english_name: 'Ethereum', binance_symbol: 'ETHUSDT', base_price: 5050000, volume_seed: 88100000000 },
-  { exchange: 'UPBIT', market_code: 'KRW-XRP', symbol: 'XRP', korean_name: '리플', english_name: 'XRP', binance_symbol: 'XRPUSDT', base_price: 3120, volume_seed: 54300000000 },
-  { exchange: 'UPBIT', market_code: 'KRW-SOL', symbol: 'SOL', korean_name: '솔라나', english_name: 'Solana', binance_symbol: 'SOLUSDT', base_price: 238000, volume_seed: 42600000000 },
-  { exchange: 'UPBIT', market_code: 'KRW-ADA', symbol: 'ADA', korean_name: '에이다', english_name: 'Cardano', binance_symbol: 'ADAUSDT', base_price: 920, volume_seed: 19400000000 },
-  { exchange: 'UPBIT', market_code: 'KRW-DOGE', symbol: 'DOGE', korean_name: '도지코인', english_name: 'Dogecoin', binance_symbol: 'DOGEUSDT', base_price: 245, volume_seed: 16800000000 },
-  { exchange: 'BINANCE', market_code: 'USDT-BTC', symbol: 'BTC', korean_name: 'Bitcoin', english_name: 'Bitcoin', binance_symbol: 'BTCUSDT', base_price: 98200, volume_seed: 2840000000 },
-  { exchange: 'BINANCE', market_code: 'USDT-ETH', symbol: 'ETH', korean_name: 'Ethereum', english_name: 'Ethereum', binance_symbol: 'ETHUSDT', base_price: 3580, volume_seed: 1960000000 },
-  { exchange: 'BINANCE', market_code: 'USDT-BNB', symbol: 'BNB', korean_name: 'BNB', english_name: 'BNB', binance_symbol: 'BNBUSDT', base_price: 710, volume_seed: 840000000 },
-  { exchange: 'BINANCE', market_code: 'USDT-SOL', symbol: 'SOL', korean_name: 'Solana', english_name: 'Solana', binance_symbol: 'SOLUSDT', base_price: 169, volume_seed: 790000000 },
-  { exchange: 'BINANCE', market_code: 'USDT-XRP', symbol: 'XRP', korean_name: 'XRP', english_name: 'XRP', binance_symbol: 'XRPUSDT', base_price: 2.22, volume_seed: 710000000 },
-  { exchange: 'BINANCE', market_code: 'USDT-DOGE', symbol: 'DOGE', korean_name: 'Dogecoin', english_name: 'Dogecoin', binance_symbol: 'DOGEUSDT', base_price: 0.174, volume_seed: 480000000 },
+  { exchange: 'UPBIT', market: 'KRW-BTC', symbol: 'BTC', korean_name: '비트코인', english_name: 'Bitcoin', binance_symbol: 'BTCUSDT', base_price: 138250000, volume_seed: 126000000000 },
+  { exchange: 'UPBIT', market: 'KRW-ETH', symbol: 'ETH', korean_name: '이더리움', english_name: 'Ethereum', binance_symbol: 'ETHUSDT', base_price: 5050000, volume_seed: 88100000000 },
+  { exchange: 'UPBIT', market: 'KRW-XRP', symbol: 'XRP', korean_name: '리플', english_name: 'XRP', binance_symbol: 'XRPUSDT', base_price: 3120, volume_seed: 54300000000 },
+  { exchange: 'UPBIT', market: 'KRW-SOL', symbol: 'SOL', korean_name: '솔라나', english_name: 'Solana', binance_symbol: 'SOLUSDT', base_price: 238000, volume_seed: 42600000000 },
+  { exchange: 'UPBIT', market: 'KRW-ADA', symbol: 'ADA', korean_name: '에이다', english_name: 'Cardano', binance_symbol: 'ADAUSDT', base_price: 920, volume_seed: 19400000000 },
+  { exchange: 'UPBIT', market: 'KRW-DOGE', symbol: 'DOGE', korean_name: '도지코인', english_name: 'Dogecoin', binance_symbol: 'DOGEUSDT', base_price: 245, volume_seed: 16800000000 },
+  { exchange: 'BINANCE', market: 'USDT-BTC', symbol: 'BTC', korean_name: 'Bitcoin', english_name: 'Bitcoin', binance_symbol: 'BTCUSDT', base_price: 98200, volume_seed: 2840000000 },
+  { exchange: 'BINANCE', market: 'USDT-ETH', symbol: 'ETH', korean_name: 'Ethereum', english_name: 'Ethereum', binance_symbol: 'ETHUSDT', base_price: 3580, volume_seed: 1960000000 },
+  { exchange: 'BINANCE', market: 'USDT-BNB', symbol: 'BNB', korean_name: 'BNB', english_name: 'BNB', binance_symbol: 'BNBUSDT', base_price: 710, volume_seed: 840000000 },
+  { exchange: 'BINANCE', market: 'USDT-SOL', symbol: 'SOL', korean_name: 'Solana', english_name: 'Solana', binance_symbol: 'SOLUSDT', base_price: 169, volume_seed: 790000000 },
+  { exchange: 'BINANCE', market: 'USDT-XRP', symbol: 'XRP', korean_name: 'XRP', english_name: 'XRP', binance_symbol: 'XRPUSDT', base_price: 2.22, volume_seed: 710000000 },
+  { exchange: 'BINANCE', market: 'USDT-DOGE', symbol: 'DOGE', korean_name: 'Dogecoin', english_name: 'Dogecoin', binance_symbol: 'DOGEUSDT', base_price: 0.174, volume_seed: 480000000 },
 ]
 
 const makeDate = (offset) => {
@@ -40,11 +40,11 @@ const buildCandles = (market, seed) => {
 }
 
 export const mockCandlesByMarket = Object.fromEntries(
-  marketSeeds.map((market, index) => [market.market_code, buildCandles(market, index + 1)])
+  marketSeeds.map((market, index) => [market.market, buildCandles(market, index + 1)])
 )
 
 export const createMockTickers = () => marketSeeds.map((market, index) => {
-  const candles = mockCandlesByMarket[market.market_code]
+  const candles = mockCandlesByMarket[market.market]
   const latest = candles[candles.length - 1]
   const previous = candles[candles.length - 2]
   const changeRate = ((latest.close - previous.close) / previous.close) * 100
@@ -56,7 +56,7 @@ export const createMockTickers = () => marketSeeds.map((market, index) => {
     opening_price: latest.open,
     high_price: latest.high,
     low_price: latest.low,
-    change: changeRate > 0 ? 'RISE' : changeRate < 0 ? 'FALL' : 'EVEN',
+    change_status: changeRate > 0 ? 'RISE' : changeRate < 0 ? 'FALL' : 'EVEN',
     signed_change_rate: changeRate,
     high_price_52w: Number((market.base_price * 1.36).toFixed(market.base_price < 10 ? 4 : 0)),
     low_price_52w: Number((market.base_price * 0.62).toFixed(market.base_price < 10 ? 4 : 0)),
@@ -77,7 +77,7 @@ export const nextMockTickers = (tickers) => tickers.map((ticker, index) => {
     trade_price: nextPrice,
     high_price: Math.max(ticker.high_price, nextPrice),
     low_price: Math.min(ticker.low_price, nextPrice),
-    change: changeRate > 0 ? 'RISE' : changeRate < 0 ? 'FALL' : 'EVEN',
+    change_status: changeRate > 0 ? 'RISE' : changeRate < 0 ? 'FALL' : 'EVEN',
     signed_change_rate: changeRate,
     acc_trade_price_24h: Math.round(ticker.acc_trade_price_24h * (1 + 0.0007 + index * 0.00002)),
   }

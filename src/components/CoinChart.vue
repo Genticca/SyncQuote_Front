@@ -2,7 +2,7 @@
   <section class="chart-card">
     <div class="chart-toolbar">
       <div>
-        <strong>{{ ticker?.market_code }}</strong>
+        <strong>{{ ticker?.market }}</strong>
         <span>Daily Mock Candles</span>
       </div>
       <div class="legend">

@@ -32,11 +32,11 @@ const selectedMarketCode = ref('KRW-BTC')
 let timerId = null
 
 const filteredTickers = computed(() => tickers.value.filter((ticker) => ticker.exchange === selectedExchange.value))
-const selectedTicker = computed(() => tickers.value.find((ticker) => ticker.market_code === selectedMarketCode.value) || filteredTickers.value[0])
-const selectedCandles = computed(() => getMockCandles(selectedTicker.value?.market_code, selectedTicker.value?.trade_price))
+const selectedTicker = computed(() => tickers.value.find((ticker) => ticker.market === selectedMarketCode.value) || filteredTickers.value[0])
+const selectedCandles = computed(() => getMockCandles(selectedTicker.value?.market, selectedTicker.value?.trade_price))
 
 watch(selectedExchange, () => {
-  selectedMarketCode.value = filteredTickers.value[0]?.market_code || ''
+  selectedMarketCode.value = filteredTickers.value[0]?.market || ''
 })
 
 onMounted(() => {

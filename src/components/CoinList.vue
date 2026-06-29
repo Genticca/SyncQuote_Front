@@ -32,11 +32,11 @@
       </p>
       <CoinListItem
         v-for="coin in sortedTickers"
-        :key="coin.market_code"
+        :key="coin.market"
         :coin="coin"
-        :selected="coin.market_code === selectedMarketCode"
-        :is-favorite="favorites.includes(coin.market_code)"
-        @select="$emit('select-coin', coin.market_code)"
+        :selected="coin.market === selectedMarketCode"
+        :is-favorite="favorites.includes(coin.market)"
+        @select="$emit('select-coin', coin.market)"
         @toggle-fav="toggleFavorite"
       />
     </div>
@@ -73,7 +73,7 @@ onMounted(() => {
 
 const displayedTickers = computed(() => {
   if (activeTab.value === 'FAVORITES') {
-    return props.allTickers.filter((coin) => favorites.value.includes(coin.market_code))
+    return props.allTickers.filter((coin) => favorites.value.includes(coin.market))
   }
   return props.tickers
 })
@@ -96,7 +96,7 @@ const filteredTickers = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
   if (!query) return categoryTickers.value
   return categoryTickers.value.filter((coin) =>
-    [coin.korean_name, coin.english_name, coin.symbol, coin.market_code].some((field) =>
+    [coin.korean_name, coin.english_name, coin.symbol, coin.market].some((field) =>
       field?.toLowerCase().includes(query)
     )
   )
