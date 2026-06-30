@@ -21,10 +21,14 @@ export const fetchCandles = async (exchange, market, interval = '1m', limit = 20
 // ===== SSE =====
 
 // 현재가 실시간. onTicker(payload) 로 변동분(market 기준) 전달. EventSource 반환(언마운트 시 close()).
-export const streamTickers = (onTicker, { exchange } = {}) => {
+export const streamTickers = (onTicker, { exchange, onState } = {}) => {
   const qs = exchange ? `?exchange=${encodeURIComponent(exchange)}` : ''
   const es = new EventSource(`${API_BASE}/stream/tickers${qs}`)
-  es.onerror = (e) => console.warn('[SyncQuote] ticker SSE 오류 — EventSource 자동 재연결 시도', es.readyState, e)
+  es.onopen = () => onState?.('open')
+  es.onerror = (e) => {
+    onState?.('error')
+    console.warn('[SyncQuote] ticker SSE 오류 — EventSource 자동 재연결 시도', es.readyState, e)
+  }
   es.addEventListener('ticker', (e) => {
     try {
       onTicker(JSON.parse(e.data))

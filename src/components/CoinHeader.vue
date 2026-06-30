@@ -6,6 +6,7 @@
         <div class="title-line">
           <h1>{{ ticker.korean_name }}</h1>
           <span v-if="ticker.market_warning === 'CAUTION'" class="warning-badge">유의</span>
+          <span class="live-pill" :class="{ on: live }">{{ live ? '실시간' : '연결 끊김' }}</span>
         </div>
         <p>{{ ticker.english_name }} · {{ ticker.exchange }}</p>
       </div>
@@ -31,6 +32,29 @@
       </div>
     </div>
 
+    <div class="meta-strip">
+      <div>
+        <span>변화액</span>
+        <strong :class="colorClass">{{ formatSignedPrice(ticker.signed_change_price, ticker.exchange) }}</strong>
+      </div>
+      <div>
+        <span>거래량 24H</span>
+        <strong>{{ formatCoinVolume(ticker.acc_trade_volume_24h) }}</strong>
+      </div>
+      <div>
+        <span>52주 최고</span>
+        <strong>{{ format52(ticker.high_price_52w, ticker.exchange) }}</strong>
+      </div>
+      <div>
+        <span>52주 최저</span>
+        <strong>{{ format52(ticker.low_price_52w, ticker.exchange) }}</strong>
+      </div>
+      <div>
+        <span>갱신</span>
+        <strong>{{ formatTime(ticker.event_timestamp) }}</strong>
+      </div>
+    </div>
+
     <div class="quick-links">
       <a v-if="exchangeLink" :href="exchangeLink" target="_blank" rel="noopener noreferrer" class="quick-link">
         {{ ticker.exchange === 'BINANCE' ? 'Binance' : 'Upbit' }}에서 보기 ↗
@@ -44,6 +68,7 @@ import { computed } from 'vue'
 
 const props = defineProps({
   ticker: { type: Object, default: null },
+  live: { type: Boolean, default: false },
 })
 
 const colorClass = computed(() => {
@@ -75,6 +100,29 @@ const formatChange = (value) => {
 
 const formatVolume = (value, exchange) => {
   const unit = exchange === 'BINANCE' ? 'M USDT' : '백만 KRW'
-  return `${Math.round(value / 1000000).toLocaleString('ko-KR')} ${unit}`
+  return `${Math.round(Number(value || 0) / 1000000).toLocaleString('ko-KR')} ${unit}`
+}
+
+const formatSignedPrice = (value, exchange) => {
+  if (value == null) return '—'
+  const currency = exchange === 'BINANCE' ? 'USDT' : 'KRW'
+  const abs = Math.abs(value)
+  const digits = abs < 10 ? 4 : abs < 1000 ? 2 : 0
+  const sign = value > 0 ? '+' : ''
+  return `${sign}${Number(value).toLocaleString('ko-KR', { maximumFractionDigits: digits })} ${currency}`
+}
+
+const formatCoinVolume = (value) => {
+  if (value == null) return '—'
+  return Number(value).toLocaleString('ko-KR', { maximumFractionDigits: 3 })
+}
+
+const format52 = (value, exchange) => (value == null ? '—' : formatPrice(value, exchange))
+
+const formatTime = (ms) => {
+  if (!ms) return '—'
+  const d = new Date(Number(ms))
+  const p = (n) => String(n).padStart(2, '0')
+  return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())} 기준`
 }
 </script>
