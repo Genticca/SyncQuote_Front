@@ -90,6 +90,7 @@ onMounted(() => {
       background: { type: ColorType.Solid, color: '#ffffff' },
       textColor: '#343a46',
       fontFamily: 'Arial, sans-serif',
+      attributionLogo: false, // 좌측 하단 TradingView 로고 숨김
     },
     grid: {
       vertLines: { color: '#eef1f5' },
