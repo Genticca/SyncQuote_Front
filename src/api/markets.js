@@ -24,6 +24,7 @@ export const fetchCandles = async (exchange, market, interval = '1m', limit = 20
 export const streamTickers = (onTicker, { exchange } = {}) => {
   const qs = exchange ? `?exchange=${encodeURIComponent(exchange)}` : ''
   const es = new EventSource(`${API_BASE}/stream/tickers${qs}`)
+  es.onerror = (e) => console.warn('[SyncQuote] ticker SSE 오류 — EventSource 자동 재연결 시도', es.readyState, e)
   es.addEventListener('ticker', (e) => {
     try {
       onTicker(JSON.parse(e.data))
@@ -38,6 +39,7 @@ export const streamTickers = (onTicker, { exchange } = {}) => {
 export const streamCandles = (onCandle, { exchange, market, interval = '1s' }) => {
   const url = `${API_BASE}/stream/candles?exchange=${encodeURIComponent(exchange)}&market=${encodeURIComponent(market)}&interval=${interval}`
   const es = new EventSource(url)
+  es.onerror = (e) => console.warn('[SyncQuote] candle SSE 오류 — EventSource 자동 재연결 시도', es.readyState, e)
   es.addEventListener('candle', (e) => {
     try {
       onCandle(JSON.parse(e.data))
