@@ -4,11 +4,11 @@
       <div class="symbol-badge">{{ ticker.symbol }}</div>
       <div>
         <div class="title-line">
-          <h1>{{ ticker.korean_name }}</h1>
+          <h1>{{ displayName }}</h1>
           <span v-if="ticker.market_warning === 'CAUTION'" class="warning-badge">유의</span>
           <span class="live-pill" :class="{ on: live }">{{ live ? '실시간' : '연결 끊김' }}</span>
         </div>
-        <p>{{ ticker.english_name }} · {{ ticker.exchange }}</p>
+        <p>{{ subTitle }}</p>
       </div>
     </div>
 
@@ -69,6 +69,19 @@ import { computed } from 'vue'
 const props = defineProps({
   ticker: { type: Object, default: null },
   live: { type: Boolean, default: false },
+})
+
+// 바이낸스는 korean_name이 비어 있어 영문명/심볼/마켓코드로 폴백.
+const displayName = computed(
+  () => props.ticker?.korean_name || props.ticker?.english_name || props.ticker?.symbol || props.ticker?.market || ''
+)
+
+// 부제: 업비트는 영문명, 바이낸스는(영문명이 곧 제목이므로) 마켓 코드 + 거래소
+const subTitle = computed(() => {
+  const t = props.ticker
+  if (!t) return ''
+  const sub = t.korean_name ? t.english_name : t.market
+  return [sub, t.exchange].filter(Boolean).join(' · ')
 })
 
 const colorClass = computed(() => {

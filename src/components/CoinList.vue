@@ -106,7 +106,7 @@ const sortKey = ref(null)
 const sortOrder = ref('asc')
 
 const sortValueGetters = {
-  name: (coin) => coin.korean_name,
+  name: (coin) => coin.korean_name || coin.english_name || coin.symbol || coin.market || '',
   price: (coin) => coin.trade_price,
   change: (coin) => coin.signed_change_rate,
   volume: (coin) => coin.acc_trade_price_24h,

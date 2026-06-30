@@ -3,7 +3,7 @@
     <span class="col-name">
       <span class="fav-icon" @click.stop="$emit('toggle-fav', coin.market)">{{ isFavorite ? '★' : '☆' }}</span>
       <span class="name-wrap">
-        <strong>{{ coin.korean_name }}</strong>
+        <strong>{{ displayName }}</strong>
         <small>{{ coin.market }}</small>
       </span>
     </span>
@@ -49,6 +49,11 @@ watch(
     const direction = newPrice !== oldPrice ? newPrice - oldPrice : (props.coin.signed_change_price ?? 0)
     triggerFlash(direction)
   }
+)
+
+// 바이낸스는 korean_name이 비어 있어 영문명/심볼/마켓코드로 폴백.
+const displayName = computed(
+  () => props.coin.korean_name || props.coin.english_name || props.coin.symbol || props.coin.market
 )
 
 const colorClass = computed(() => {
