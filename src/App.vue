@@ -70,8 +70,15 @@ const selectedCandles = computed(() => {
   return chartInterval.value === '1s' ? base : withLivePrice(base, ticker.trade_price)
 })
 
+// 기본 진입 코인은 비트코인(거래소별 BTC 마켓). 없으면 목록 첫 종목.
+const defaultBtcMarket = () => (selectedExchange.value === 'BINANCE' ? 'BTCUSDT' : 'KRW-BTC')
+const pickDefaultMarket = () => {
+  const list = filteredTickers.value
+  const btc = defaultBtcMarket()
+  return list.some((t) => t.market === btc) ? btc : list[0]?.market || ''
+}
 const ensureSelection = () => {
-  selectedMarket.value = selectedTicker.value?.market || filteredTickers.value[0]?.market || ''
+  selectedMarket.value = pickDefaultMarket()
 }
 
 const loadCandles = async (market, exchange, interval) => {
@@ -145,7 +152,7 @@ onMounted(async () => {
 })
 
 watch(selectedExchange, () => {
-  selectedMarket.value = filteredTickers.value[0]?.market || ''
+  selectedMarket.value = pickDefaultMarket()
 })
 
 // 마켓/인터벌 변경 → 해당 봉 로드 + 1s 캔들 스트림 재연결
