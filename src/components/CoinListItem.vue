@@ -25,14 +25,26 @@ const props = defineProps({
 defineEmits(['select', 'toggle-fav'])
 
 const flashClass = ref('')
+let flashTimer = null
 
-watch(() => props.coin.trade_price, (newPrice, oldPrice) => {
-  if (oldPrice === undefined || newPrice === oldPrice) return
-  flashClass.value = newPrice > oldPrice ? 'flash-up' : 'flash-down'
-  window.setTimeout(() => {
+const triggerFlash = (direction) => {
+  flashClass.value = direction >= 0 ? 'flash-up' : 'flash-down'
+  if (flashTimer) window.clearTimeout(flashTimer)
+  flashTimer = window.setTimeout(() => {
     flashClass.value = ''
   }, 450)
-})
+}
+
+// 가격이 바뀐 체결뿐 아니라 같은 가격이라도 거래대금이 늘면(=체결 발생) 행을 깜빡인다.
+// 방향: 가격이 바뀌면 그 부호로, 같은 가격이면 전일대비(signed_change_price) 부호로 판정.
+watch(
+  () => [props.coin.trade_price, props.coin.acc_trade_price_24h],
+  ([newPrice, newVol], [oldPrice, oldVol]) => {
+    if (oldPrice === undefined || (newPrice === oldPrice && newVol === oldVol)) return
+    const direction = newPrice !== oldPrice ? newPrice - oldPrice : (props.coin.signed_change_price ?? 0)
+    triggerFlash(direction)
+  }
+)
 
 const colorClass = computed(() => {
   if (props.coin.change_status === 'RISE') return 'text-red'
