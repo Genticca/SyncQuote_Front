@@ -1,7 +1,11 @@
 <template>
   <main class="dashboard-shell">
     <p v-if="loadError" class="error-banner">⚠ {{ loadError }}</p>
-    <section class="workspace">
+    <div v-if="loading" class="loading-screen">
+      <div class="loading-spinner" aria-hidden="true"></div>
+      <p class="loading-text">데이터를 불러오는 중…</p>
+    </div>
+    <section v-else class="workspace">
       <div class="main-panel">
         <CoinHeader :ticker="selectedTicker" :live="live" />
         <CoinChart
@@ -41,6 +45,7 @@ const chartInterval = ref('1m')
 const candlesCache = ref({}) // `${market}:${interval}` -> 봉 배열
 const live = ref(false) // ticker SSE 연결 상태
 const loadError = ref('')
+const loading = ref(true) // 첫 진입 데이터 로딩 표시
 
 let tickerStream = null
 let candleStream = null
@@ -148,6 +153,8 @@ onMounted(async () => {
   } catch (error) {
     console.error('[SyncQuote] 현재가 조회 실패', error)
     loadError.value = '시세 데이터를 불러오지 못했습니다. 백엔드 API 연결을 확인하세요.'
+  } finally {
+    loading.value = false
   }
 })
 
@@ -180,5 +187,29 @@ const handleCoinSelect = (market) => {
   color: #b3261e;
   font-size: 12px;
   text-align: center;
+}
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 70vh;
+  color: #68717f;
+}
+.loading-spinner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3px solid #e3e7ee;
+  border-top-color: #115dcb;
+  animation: sq-spin 0.8s linear infinite;
+}
+.loading-text {
+  margin: 0;
+  font-size: 14px;
+}
+@keyframes sq-spin {
+  to { transform: rotate(360deg); }
 }
 </style>

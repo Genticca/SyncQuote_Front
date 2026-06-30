@@ -103,6 +103,9 @@ onMounted(() => {
       borderColor: '#d8dde6',
       timeVisible: true,
       secondsVisible: true,
+      fixLeftEdge: true,   // 데이터 없는 과거로 과도하게 스크롤되는 것 차단
+      fixRightEdge: true,  // 최신 봉 너머 빈 공간으로 밀리는 것 차단
+      lockVisibleTimeRangeOnResize: true,
     },
   })
 

@@ -28,11 +28,16 @@ const flashClass = ref('')
 let flashTimer = null
 
 const triggerFlash = (direction) => {
-  flashClass.value = direction >= 0 ? 'flash-up' : 'flash-down'
+  const next = direction >= 0 ? 'flash-up' : 'flash-down'
+  // 같은 방향 연속 체결도 애니메이션이 다시 재생되도록 한 번 비웠다가 다음 프레임에 적용.
+  flashClass.value = ''
+  window.requestAnimationFrame(() => {
+    flashClass.value = next
+  })
   if (flashTimer) window.clearTimeout(flashTimer)
   flashTimer = window.setTimeout(() => {
     flashClass.value = ''
-  }, 450)
+  }, 900)
 }
 
 // 가격이 바뀐 체결뿐 아니라 같은 가격이라도 거래대금이 늘면(=체결 발생) 행을 깜빡인다.
