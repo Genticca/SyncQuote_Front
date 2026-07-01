@@ -1,7 +1,5 @@
 <template>
   <main class="dashboard-shell">
-    <p v-if="loadError" class="error-banner">⚠ {{ loadError }}</p>
-
     <!-- 첫 로딩: 전체 화면 스피너 대신 실제 레이아웃 형태의 스켈레톤을 즉시 노출 -->
     <section v-if="loading" class="workspace skeleton-view" aria-hidden="true">
       <div class="main-panel">
@@ -44,6 +42,16 @@
         </div>
       </aside>
     </section>
+
+    <!-- 로딩 실패: 상단 배너 대신 전체 에러 상태 + 다시 시도 -->
+    <div v-else-if="loadError" class="error-state" role="alert">
+      <div class="error-illustration" aria-hidden="true">!</div>
+      <h2 class="error-title">데이터를 불러오지 못했어요</h2>
+      <p class="error-desc">{{ loadError }}</p>
+      <button type="button" class="error-retry" @click="loadInitialData">
+        <span class="retry-icon" aria-hidden="true">↻</span> 다시 시도
+      </button>
+    </div>
 
     <section v-else class="workspace">
       <div class="main-panel">
@@ -178,7 +186,12 @@ const openTickerStream = () => {
   )
 }
 
-onMounted(async () => {
+// 첫 진입 데이터 적재. 실패 시 에러 상태를 띄우고, '다시 시도' 버튼이 이 함수를 재호출한다.
+const loadInitialData = async () => {
+  loading.value = true
+  loadError.value = ''
+  tickerStream?.close() // 재시도 대비: 기존 스트림이 있으면 정리 후 다시 연다
+  tickerStream = null
   try {
     const [tickerList, marketList] = await Promise.all([
       fetchTickers(), // 전체 거래소 1회 적재 → 탭 전환은 클라이언트 필터
@@ -196,7 +209,9 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(loadInitialData)
 
 watch(selectedExchange, () => {
   selectedMarket.value = pickDefaultMarket()
@@ -220,12 +235,70 @@ const handleCoinSelect = (market) => {
 </script>
 
 <style scoped>
-.error-banner {
-  margin: 0;
-  padding: 6px 12px;
-  background: #fdecec;
-  color: #b3261e;
-  font-size: 12px;
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 70vh;
+  padding: 40px 20px;
   text-align: center;
+}
+.error-illustration {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: #fdeaea;
+  color: #d24f45;
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  animation: err-pulse 2s ease-in-out infinite;
+}
+.error-title {
+  margin: 4px 0 0;
+  font-size: 22px;
+  color: #222831;
+}
+.error-desc {
+  margin: 0;
+  max-width: 420px;
+  color: #68717f;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.error-retry {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 24px;
+  border: 0;
+  border-radius: 8px;
+  background: #115dcb;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.error-retry:hover {
+  background: #0d4ba6;
+}
+.error-retry:active {
+  transform: translateY(1px);
+}
+.retry-icon {
+  font-size: 17px;
+}
+@keyframes err-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(210, 79, 69, 0.28); }
+  50% { box-shadow: 0 0 0 16px rgba(210, 79, 69, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .error-illustration { animation: none; }
 }
 </style>
