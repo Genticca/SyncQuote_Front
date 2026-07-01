@@ -1,10 +1,50 @@
 <template>
   <main class="dashboard-shell">
     <p v-if="loadError" class="error-banner">⚠ {{ loadError }}</p>
-    <div v-if="loading" class="loading-screen">
-      <div class="loading-spinner" aria-hidden="true"></div>
-      <p class="loading-text">데이터를 불러오는 중…</p>
-    </div>
+
+    <!-- 첫 로딩: 전체 화면 스피너 대신 실제 레이아웃 형태의 스켈레톤을 즉시 노출 -->
+    <section v-if="loading" class="workspace skeleton-view" aria-hidden="true">
+      <div class="main-panel">
+        <div class="coin-header">
+          <div class="asset-title">
+            <div class="sk sk-badge"></div>
+            <div class="sk-titles">
+              <div class="sk sk-line sk-title"></div>
+              <div class="sk sk-line sk-sub"></div>
+            </div>
+          </div>
+          <div class="summary-grid">
+            <div class="sk sk-block" v-for="n in 4" :key="n"></div>
+          </div>
+          <div class="meta-strip">
+            <div class="sk sk-line" v-for="n in 5" :key="n" style="height: 26px"></div>
+          </div>
+        </div>
+
+        <div class="chart-card sk-chart">
+          <div class="sk sk-fill"></div>
+        </div>
+
+        <div class="info-panel">
+          <div class="info-block">
+            <div class="sk sk-line sk-block-line" v-for="n in 5" :key="'a' + n"></div>
+          </div>
+          <div class="info-block">
+            <div class="sk sk-line sk-block-line" v-for="n in 5" :key="'b' + n"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="market-panel">
+        <div class="list-container">
+          <div class="sk sk-tabs"></div>
+          <div class="sk-rows">
+            <div class="sk sk-row" v-for="n in 10" :key="n"></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
     <section v-else class="workspace">
       <div class="main-panel">
         <CoinHeader :ticker="selectedTicker" :live="live" />
@@ -187,29 +227,5 @@ const handleCoinSelect = (market) => {
   color: #b3261e;
   font-size: 12px;
   text-align: center;
-}
-.loading-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  min-height: 70vh;
-  color: #68717f;
-}
-.loading-spinner {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 3px solid #e3e7ee;
-  border-top-color: #115dcb;
-  animation: sq-spin 0.8s linear infinite;
-}
-.loading-text {
-  margin: 0;
-  font-size: 14px;
-}
-@keyframes sq-spin {
-  to { transform: rotate(360deg); }
 }
 </style>
