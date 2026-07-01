@@ -51,6 +51,7 @@
         <CoinChart
           :ticker="selectedTicker"
           :candles="selectedCandles"
+          :load-older="loadOlderCandles"
           v-model:interval="chartInterval"
         />
         <InfoPanel :ticker="selectedTicker" :market-meta="selectedMarketMeta" />
@@ -136,6 +137,33 @@ const loadCandles = async (market, exchange, interval) => {
   } catch (error) {
     console.error('[SyncQuote] 봉 조회 실패', key, error)
     candlesCache.value = { ...candlesCache.value, [key]: [] }
+  }
+}
+
+// 차트를 과거로 스크롤하면 호출: 가장 오래된 봉보다 이전 구간을 to 커서로 받아 앞에 붙인다.
+// 1s는 Redis(짧은 보존 + SSE가 앞에서 shift)라 페이징 제외 → 1m(MySQL, 깊은 히스토리)만.
+// 반환: 새로 붙인 봉 수(0 = 더 이상 과거 없음).
+let loadingOlder = false
+const loadOlderCandles = async () => {
+  const ticker = selectedTicker.value
+  const interval = chartInterval.value
+  if (!ticker || interval !== '1m' || loadingOlder) return 0
+  const key = `${ticker.market}:${interval}`
+  const existing = candlesCache.value[key]
+  if (!existing || existing.length === 0) return 0
+  loadingOlder = true
+  try {
+    const oldest = existing[0].time // 오름차순 첫 봉의 시각(epoch 초)
+    const data = await fetchCandles(ticker.exchange, ticker.market, interval, 200, oldest - 1)
+    const older = (data.candles || []).filter((c) => c.time < oldest)
+    if (older.length === 0) return 0
+    candlesCache.value = { ...candlesCache.value, [key]: [...older, ...existing] }
+    return older.length
+  } catch (error) {
+    console.error('[SyncQuote] 과거 봉 조회 실패', key, error)
+    return 0
+  } finally {
+    loadingOlder = false
   }
 }
 
