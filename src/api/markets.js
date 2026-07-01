@@ -15,8 +15,9 @@ export const fetchMarkets = async (exchange) =>
   unwrap(await api.get('/markets', { params: exchange ? { exchange } : {} }))
 
 // 봉 조회(차트). 반환: { exchange, market, interval, candles: [{time,open,high,low,close,volume}] }
-export const fetchCandles = async (exchange, market, interval = '1m', limit = 200) =>
-  unwrap(await api.get('/candles', { params: { exchange, market, interval, limit } }))
+// to(epoch 초) 지정 시 그 시각 이하의 최근 limit개 → 과거 페이징에 사용.
+export const fetchCandles = async (exchange, market, interval = '1m', limit = 200, to) =>
+  unwrap(await api.get('/candles', { params: { exchange, market, interval, limit, ...(to != null ? { to } : {}) } }))
 
 // ===== SSE =====
 

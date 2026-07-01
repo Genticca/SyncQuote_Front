@@ -43,6 +43,7 @@ const props = defineProps({
   ticker: { type: Object, default: null },
   candles: { type: Array, default: () => [] },
   interval: { type: String, default: '1m' },
+  loadOlder: { type: Function, default: null }, // 과거 봉 지연 로더(0 반환 시 더 없음)
 })
 
 defineEmits(['update:interval'])
@@ -57,6 +58,10 @@ let chart = null
 let candlestickSeries = null
 let volumeSeries = null
 let resizeObserver = null
+let renderedKey = ''       // 현재 그려진 종목:인터벌 (바뀌면 fresh = 전체 맞춤)
+let loadingMore = false    // 과거 로딩 중복 방지
+let noMore = false         // 더 이상 과거 데이터 없음
+let canLoadOlder = false   // fresh 직후 자동 로딩 방지: 사용자가 줌/스크롤해야 활성화
 
 const numFmt = (value) => {
   const v = Number(value)
@@ -72,6 +77,12 @@ const timeFmt = (time) => {
 
 const setChartData = () => {
   if (!candlestickSeries) return
+  const key = `${props.ticker?.market ?? ''}:${props.interval}`
+  const fresh = key !== renderedKey
+  // 실시간 갱신(매 틱 마지막 봉 변경)·과거 prepend 시엔 사용자의 보기 범위를 보존해
+  // fitContent 스냅백(과거로 스크롤해도 전체 맞춤으로 튕김)을 막는다.
+  const savedRange = !fresh && props.candles.length ? chart?.timeScale().getVisibleRange() : null
+
   candlestickSeries.setData(props.candles)
   volumeSeries?.setData(
     props.candles.map((c) => ({
@@ -80,7 +91,22 @@ const setChartData = () => {
       color: c.close >= c.open ? 'rgba(210, 79, 69, 0.45)' : 'rgba(18, 97, 196, 0.45)',
     }))
   )
-  chart?.timeScale().fitContent()
+
+  if (!props.candles.length) return // 빈 데이터면 renderedKey 유지(다음 실데이터에서 fresh 처리)
+
+  if (fresh) {
+    renderedKey = key
+    noMore = false
+    loadingMore = false
+    canLoadOlder = false
+    chart?.timeScale().fitContent() // 새 종목/인터벌만 전체 맞춤
+  } else if (savedRange) {
+    try {
+      chart?.timeScale().setVisibleRange(savedRange)
+    } catch {
+      /* 저장 범위가 새 데이터 밖이면 무시 */
+    }
+  }
 }
 
 onMounted(() => {
@@ -145,6 +171,22 @@ onMounted(() => {
       dir: change >= 0 ? 'text-red' : 'text-blue',
     }
     tooltipStyle.value = { left: `${param.point.x + 16}px`, top: `${param.point.y + 16}px` }
+  })
+
+  // 과거로 스크롤해 왼쪽 끝(가장 오래된 봉) 근처에 오면 이전 구간을 더 불러와 앞에 붙인다.
+  chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
+    if (!range) return
+    // 왼쪽에 여유가 생긴 적(줌인/스크롤)이 있어야 자동 로딩 허용 → 첫 전체맞춤 직후 불필요한 요청 방지.
+    if (range.from > 8) canLoadOlder = true
+    if (!props.loadOlder || loadingMore || noMore || !canLoadOlder || range.from > 8) return
+    loadingMore = true
+    Promise.resolve(props.loadOlder())
+      .then((added) => {
+        if (!added) noMore = true // 더 이상 과거 데이터 없음 → 재요청 중단
+      })
+      .finally(() => {
+        loadingMore = false
+      })
   })
 
   resizeObserver = new ResizeObserver(([entry]) => {
